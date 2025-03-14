@@ -1,85 +1,83 @@
-"use client";
+"use client"
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import dynamic from "next/dynamic";
 import { OnMount } from "@monaco-editor/react";
 const Editor = dynamic(() => import("@monaco-editor/react"), { ssr: false });
 
+// Imported Types
+import type * as Y from "yjs";
+import type { WebsocketProvider } from "y-websocket";
+import type { MonacoBinding } from "y-monaco";
+
+// Constants
+const YJS_SERVER_URL = "ws://localhost:4000/yjs";
+const YJS_ROOM_NAME = "room1";
+
+const loadYjsModules = async () => {
+  const Y = await import("yjs");
+  const { WebsocketProvider } = await import("y-websocket");
+  const { MonacoBinding } = await import("y-monaco");
+  return { Y, WebsocketProvider, MonacoBinding };
+};
+
 const CodeEditor = () => {
   const [isConnected, setIsConnected] = useState(false);
   const editorRef = useRef<Parameters<OnMount>[0] | null>(null);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const ydocRef = useRef<any>(null);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const providerRef = useRef<any>(null);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const bindingRef = useRef<any>(null);
+  const ydocRef = useRef<Y.Doc | null>(null);
+  const providerRef = useRef<WebsocketProvider | null>(null);
+  const bindingRef = useRef<MonacoBinding | null>(null);
 
-  const handleEditorMount = useCallback(async (editor: Parameters<OnMount>[0]) => {
-    if (!editor) return;
-
-    editorRef.current = editor;
+  const initializeYjs = useCallback(async (editor: Parameters<OnMount>[0]) => {
+    if (!editor || ydocRef.current) return;
 
     try {
-      if (!ydocRef.current) {
-        const Y = await import("yjs");
-        const { WebsocketProvider } = await import("y-websocket");
-        const { MonacoBinding } = await import("y-monaco");
+      const { Y, WebsocketProvider, MonacoBinding } = await loadYjsModules();
 
-        // Create a Y.js document only once
-        ydocRef.current = new Y.Doc();
+      ydocRef.current = new Y.Doc();
+      providerRef.current = new WebsocketProvider(YJS_SERVER_URL, YJS_ROOM_NAME, ydocRef.current);
 
-        // Connect to the Y.js WebSocket server only once
-        providerRef.current = new WebsocketProvider(
-          "ws://localhost:4000/yjs",
-          "room1",
-          ydocRef.current
-        );
+      const yText = ydocRef.current.getText("monaco");
 
-        // Create a shared text object in Y.js
-        const yText = ydocRef.current.getText("monaco");
+      providerRef.current.on("status", ({ status }: { status: string }) => {
+        console.log("WebSocket Status:", status);
+        setIsConnected(status === "connected");
+      });
 
-        // Monitor WebSocket connection status
-        providerRef.current.on("status", (event) => {
-          console.log("WebSocket Status:", event.status);
-          setIsConnected(event.status === "connected");
-        });
-
-        // Bind Y.js document with Monaco Editor only after it is mounted
-        const model = editor.getModel();
-        if (model) {
-          bindingRef.current = new  MonacoBinding(
-            yText,
-            model,
-            new Set([editor]),
-            providerRef.current.awareness
-          );
-        }
+      const model = editor.getModel();
+      if (model) {
+        bindingRef.current = new MonacoBinding(yText, model, new Set([editor]), providerRef.current.awareness);
       }
     } catch (error) {
       console.error("Failed to initialize collaborative features:", error);
     }
   }, []);
 
+  const handleEditorMount = useCallback((editor: Parameters<OnMount>[0]) => {
+    editorRef.current = editor;
+    initializeYjs(editor);
+  }, [initializeYjs]);
+
+  // Cleanup Y.js and WebSocket on unmount
   useEffect(() => {
     return () => {
       bindingRef.current?.destroy();
       providerRef.current?.destroy();
       ydocRef.current?.destroy();
-    }
+    };
   }, []);
 
   return (
     <>
       <h1>Real-Time Code Collaboration {isConnected ? "✅ Connected" : "❌ Disconnected"}</h1>
-      <Editor
-        height="500px"
-        defaultLanguage="javascript"
-        theme="vs-dark"
-        onMount={handleEditorMount}
+      <Editor 
+        height="500px" 
+        defaultLanguage="javascript" 
+        theme="vs-dark" 
+        onMount={handleEditorMount} 
       />
     </>
   );
-};
+}
 
 export default CodeEditor;
