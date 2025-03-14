@@ -1,5 +1,11 @@
 {
-  "type": "commonjs",
+  "name": "server",
+  "version": "1.0.0",
+  "description": "WebSocket server for Y.js collaboration",
+  "main": "server.js",
+  "scripts": {
+    "dev": "node server.js"
+  },
   "dependencies": {
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
