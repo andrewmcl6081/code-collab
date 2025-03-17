@@ -1,10 +1,24 @@
+import { auth0 } from "@/lib/auth0";
+import Link from "next/link";
 
-const Home = () => {
-  
+const Home = async () => {
+  const session = await auth0.getSession();
+
   return (
-    <>
-      <h1>Welcome</h1>
-    </>
+    <div>
+      <h1>Welcome to Code Collab</h1>
+      <p>Collaborate and code in real-time with your team.</p>
+
+      {session ? (
+        <Link href="/dashboard">
+          Go to Dashboard
+        </Link>
+      ) : (
+        <Link href="/auth/login">
+          Login
+        </Link>
+      )}
+    </div>
   );
 }
 
