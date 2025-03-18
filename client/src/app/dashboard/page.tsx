@@ -1,8 +1,5 @@
-import { auth0 } from "@/lib/auth0";
-import { redirect } from "next/navigation";
 
 const Dashboard = async () => {
-  const session = await auth0.getSession() ?? redirect("/");
   
   return (
     <>
