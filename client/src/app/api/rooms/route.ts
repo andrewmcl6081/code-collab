@@ -1,23 +1,31 @@
+// /api/rooms
 import { NextResponse } from "next/server";
 import { auth0 } from "@/lib/auth0";
 import prisma from "@/lib/prisma";
+import crypto from "crypto";
 
 export async function POST(req: Request) {
-  // Check if the user is authenticated
   const session = await auth0.getSession();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   // Check if request contains new room name
   const { name } = await req.json();
   if (!name) return NextResponse.json({ error: "Room name is required" }, { status: 400 });
 
   try {
+    const inviteCode = crypto.randomBytes(6).toString("hex");
+
     // Create a room and return roomId and name
     const room = await prisma.room.create({
-      data: { name },
+      data: { 
+        name,
+        inviteCode,
+        createdBy: session!.user.sub
+      },
     });
 
-    return NextResponse.json({ roomId: room.id, name: room.name });
+    const inviteLink = `${process.env.APP_BASE_URL}/join?code=${inviteCode}`;
+
+    return NextResponse.json({ roomId: room.id, name: room.name, inviteCode, inviteLink });
   } catch (error) {
     console.error("Error creating room:", error);
 

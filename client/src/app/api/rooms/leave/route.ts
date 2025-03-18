@@ -1,3 +1,4 @@
+// /api/rooms/leave
 import { NextResponse } from "next/server";
 import { auth0 } from "@/lib/auth0";
 import prisma from "@/lib/prisma";
@@ -5,11 +6,11 @@ import prisma from "@/lib/prisma";
 export async function POST() {
   // Check if the user is authenticated
   const session = await auth0.getSession();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const auth0User = session!.user;
 
   try {
     const user = await prisma.user.findUnique({
-      where: { auth0Id: session.user.sub },
+      where: { auth0Id: auth0User.sub },
     });
 
     if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
