@@ -26,6 +26,8 @@ model User {
 model Room {
   id              String    @id @default(uuid())
   name            String
+  inviteCode      String    @unique
+  createdBy       String    // Auth0Id
   users           User[]
   createdAt       DateTime  @default(now())
 }
