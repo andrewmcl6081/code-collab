@@ -6,9 +6,7 @@ import prisma from "@/lib/prisma";
 export async function GET(req: Request, { params }: { params: { id: string } }) {
   const room = await prisma.room.findUnique({
     where: { id: params.id },
-    include: {
-      members: { include: { user: true } }
-    },
+    include: { members: { include: { user: true } } },
   });
 
   if (!room) {
