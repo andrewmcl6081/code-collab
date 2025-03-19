@@ -4,7 +4,8 @@ import { NextResponse } from "next/server";
 export const auth0 = new Auth0Client({
   signInReturnToPath: "/",
   authorizationParameters: {
-    scope: "openid profile email"
+    scope: "openid profile email",
+    audience: "https://my-nextjs-api", 
   },
   async onCallback(error, context, session) {
     if (error) {

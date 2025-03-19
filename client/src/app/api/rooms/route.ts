@@ -6,6 +6,7 @@ import crypto from "crypto";
 
 export async function POST(req: Request) {
   const session = await auth0.getSession();
+  const auth0User = session!.user;
 
   // Check if request contains new room name
   const { name } = await req.json();
@@ -14,7 +15,7 @@ export async function POST(req: Request) {
   try {
     const inviteCode = crypto.randomBytes(6).toString("hex");
 
-    // Create a room and return roomId and name
+    // Create the room
     const room = await prisma.room.create({
       data: { 
         name,
@@ -23,9 +24,22 @@ export async function POST(req: Request) {
       },
     });
 
+    // Add the creator as a member in RoomUser
+    await prisma.roomUser.create({
+      data: {
+        userId: auth0User.sub,
+        roomId: room.id
+      },
+    });
+
     const inviteLink = `${process.env.APP_BASE_URL}/join?code=${inviteCode}`;
 
-    return NextResponse.json({ roomId: room.id, name: room.name, inviteCode, inviteLink });
+    return NextResponse.json({
+      roomId: room.id,
+      name: room.name, 
+      inviteCode, 
+      inviteLink,
+    });
   } catch (error) {
     console.error("Error creating room:", error);
 
