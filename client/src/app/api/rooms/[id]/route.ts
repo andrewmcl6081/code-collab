@@ -6,14 +6,21 @@ import prisma from "@/lib/prisma";
 export async function GET(req: Request, { params }: { params: { id: string } }) {
   const room = await prisma.room.findUnique({
     where: { id: params.id },
-    include: { members: true },
+    include: {
+      members: { include: { user: true } }
+    },
   });
 
   if (!room) {
     return NextResponse.json({ error: "Room not found" }, { status: 404 });
   }
 
-  return NextResponse.json(room);
+  return NextResponse.json({
+    id: room.id,
+    name: room.name,
+    createdBy: room.createdBy,
+    members: room.members.map((member) => member.user),
+  });
 }
 
 // PATCH: Rename the room (can only be done by creator)
@@ -54,6 +61,11 @@ export async function DELETE(req: Request, { params }: { params: { id: string } 
   if (!room || room.createdBy !== auth0User.sub) {
     return NextResponse.json({ error: "Not authorized to delete this room" }, { status: 403 });
   }
+
+  // First delete RoomUser associatations
+  await prisma.roomUser.deleteMany({
+    where: { roomId: params.id }
+  });
 
   await prisma.room.delete({
     where: { id: params.id },
