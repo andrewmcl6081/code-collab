@@ -4,12 +4,13 @@
   "description": "WebSocket server for Y.js collaboration",
   "main": "server.js",
   "scripts": {
-    "dev": "node server.js"
+    "dev": "node index.js"
   },
   "dependencies": {
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
+    "socket.io": "^4.8.1",
     "ws": "^8.18.1",
     "y-websocket": "^2.1.0"
   }
