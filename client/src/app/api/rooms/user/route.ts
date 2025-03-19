@@ -8,8 +8,14 @@ export async function GET() {
 
   const user = await prisma.user.findUnique({
     where: { auth0Id: auth0User.sub },
-    include: { currentRoom: true },
+    include: { rooms: { include: { room: true } } },
   });
 
-  return NextResponse.json(user?.currentRoom ? [user.currentRoom] : []);
+  if (!user) {
+    return NextResponse.json({ error: "User not found" }, { status: 404 });
+  }
+
+  const rooms = user.rooms.map((roomEntry) => roomEntry.room)
+
+  return NextResponse.json(rooms)
 }

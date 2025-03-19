@@ -23,18 +23,24 @@ export async function POST(req: Request) {
 
   // Find user in database
   const user = await prisma.user.findUnique({
-    where: { auth0Id: auth0User.sub }
+    where: { auth0Id: auth0User.sub },
+    include: { rooms: true }
   });
 
   if (!user) {
     return NextResponse.json({ error: "User not found" }, { status: 404 });
   }
 
-  // Ensure user is not in another room
-  await prisma.user.update({
-    where: { id: user.id },
-    data: { currentRoomId: room.id },
+  // Check if user is already a member, if not, add them
+  const isMember = await prisma.roomUser.findUnique({
+    where: { userId_roomId: { userId: user.id, roomId: room.id } },
   });
+
+  if (!isMember) {
+    await prisma.roomUser.create({
+      data: { userId: user.id, roomId: room.id }
+    });
+  }
 
   return NextResponse.json({ message: "Joined room successfully", roomId: room.id });
 }
