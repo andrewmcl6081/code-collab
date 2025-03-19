@@ -18,8 +18,7 @@ model User {
   auth0Id         String    @unique
   email           String?   @unique
   name            String
-  currentRoomId   String?   @unique
-  currentRoom     Room?     @relation(fields: [currentRoomId], references: [id])
+  rooms           RoomUser[]
   createdAt       DateTime  @default(now())
 }
 
@@ -28,6 +27,16 @@ model Room {
   name            String
   inviteCode      String    @unique
   createdBy       String    // Auth0Id
-  users           User[]
+  members         RoomUser[]
   createdAt       DateTime  @default(now())
+}
+
+model RoomUser {
+  id              String    @id @default(uuid())
+  user            User      @relation(fields: [userId], references: [id])
+  userId          String
+  room            Room      @relation(fields: [roomId], references: [id])
+  roomId          String
+
+  @@unique([userId, roomId])
 }
