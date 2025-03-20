@@ -2,7 +2,7 @@
   "name": "server",
   "version": "1.0.0",
   "description": "WebSocket server for Y.js collaboration",
-  "main": "server.js",
+  "main": "index.js",
   "scripts": {
     "dev": "node index.js"
   },
