@@ -1,4 +1,5 @@
 const { Server } = require("socket.io");
+const authenticateSocket = require("./authMiddleware");
 
 /**
  * Sets up the Socket.io server for chat functionality
@@ -12,6 +13,9 @@ function setupSocketIO(server) {
       methods: ["GET", "POST"]
     }
   });
+
+  // Use auth middleware
+  io.use(authenticateSocket);
 
   // Handle Socket.io connections
   io.on("connection", (socket) => {
