@@ -2,26 +2,27 @@
 
 import { useState, useEffect } from "react";
 import { useSocket } from "@/context/SocketContext";
+import type { ChatMessage } from "@/types/chat";
 
 const ChatTester = () => {
   const { socket, isConnected, joinRoom } = useSocket();
   const [roomId, setRoomId] = useState("test-room");
   const [message, setMessage] = useState("");
-  const [messages, setMessages] = useState<string[]>([]);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
 
   useEffect(() => {
     if (!socket) return;
 
     joinRoom(roomId);
 
-    socket.on("chatMessage", (data: any) => {
-      setMessages((prev) => [...prev, `${data.id}: ${data.message}`]);
+    socket.on("chatMessage", (data: ChatMessage) => {
+      setMessages((prev) => [...prev, data]);
     });
 
     return () => {
       socket.off("chatMessage");
     };
-  }, [socket, joinRoom, roomId]);
+  }, [socket, roomId, joinRoom]);
 
   const sendMessage = () => {
     if (socket && message.trim()) {
@@ -40,10 +41,40 @@ const ChatTester = () => {
       </p>
 
       <div className="mb-4">
-        <label className=""></label>
+        <label className="text-sm text-gray-700 dark:text-gray-300 mr-2">Room:</label>
+        <input
+          value={roomId}
+          onChange={(e) => setRoomId(e.target.value)}
+          className="px-2 py-1 border rounded w-full mt-1"
+        />
       </div>
+
+      <div className="flex gap-2 mb-4">
+        <input
+          placeholder="Your message"
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+          className="flex-1 px-2 py-1 border rounded"
+        />
+        <button
+          onClick={sendMessage}
+          className="bg-blue-600 text-white px-4 py-1 rounded hover:bg-blue-700 transition"
+        >
+          Send
+        </button>
+      </div>
+
+      <ul className="space-y-1 text-sm text-gray-800 dark:text-gray-200 max-h-60 overflow-y-auto">
+        {messages.map((msg, i) => (
+          <li key={i} className="border-b pb-1">
+            <span className="font-semibold">{msg.displayName}</span>: {msg.message}
+            <br />
+            <span className="text-xs text-gray-500">{new Date(msg.timestamp).toLocaleTimeString()}</span>
+          </li>
+        ))}
+      </ul>
     </div>
   );
-}
+};
 
 export default ChatTester;

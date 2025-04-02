@@ -1,6 +1,6 @@
 "use client"
 
-import React, { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import React, { createContext, useContext, useEffect, useState, ReactNode, useCallback } from "react";
 import { io, Socket } from "socket.io-client";
 import { getAccessToken, useUser } from "@auth0/nextjs-auth0";
 
@@ -26,12 +26,15 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
   const { user } = useUser();
 
   useEffect(() => {
+    let socketInstance: Socket;
+
     const initializeSocket = async () => {
       if (!user) return;
+      console.log("USER:", user);
 
       try {
         const accessToken = await getAccessToken();
-        const socketInstance = io(process.env.PUBLIC_SOCKET_URL || "http://localhost:4000", {
+        socketInstance = io(process.env.PUBLIC_SOCKET_URL || "http://localhost:4000", {
           auth: {
             token: accessToken,
           },
@@ -50,13 +53,15 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
     initializeSocket();
 
     return () => {
-      socket?.disconnect();
+      socketInstance?.disconnect();
     };
-  }, [user, socket]);
+  }, [user]);
 
-  const joinRoom = (roomId: string) => {
-    if (socket) socket.emit("joinRoom", roomId);
-  };
+  const joinRoom = useCallback((roomId: string) => {
+    if (socket) {
+      socket.emit("joinRoom", roomId);
+    }
+  }, [socket]);
 
   return (
     <SocketContext.Provider value={{ socket, isConnected, joinRoom }}>

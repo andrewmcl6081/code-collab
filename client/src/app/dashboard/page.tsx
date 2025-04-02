@@ -1,5 +1,7 @@
-"use client"
+"use client";
+
 import { useState } from "react";
+import ChatTester from "@/components/ChatTester";
 
 const Dashboard = () => {
   const [room, setRoom] = useState(null);
@@ -24,6 +26,7 @@ const Dashboard = () => {
       <p>Welcome to the Dashboard!</p>
       <button onClick={createRoom}>Create Room</button>
       {room && <p>Room Created: {room.name}</p>}
+      <ChatTester />
     </>
   );
 }

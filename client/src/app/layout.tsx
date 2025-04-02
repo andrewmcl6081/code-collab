@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Auth0Provider } from "@auth0/nextjs-auth0";
+import { SocketProvider } from "@/context/SocketContext";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -27,7 +28,9 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <Auth0Provider>
-          {children}
+          <SocketProvider>
+            {children}
+          </SocketProvider>
         </Auth0Provider>
       </body>
     </html>
