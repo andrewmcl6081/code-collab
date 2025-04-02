@@ -1,8 +1,9 @@
-"use client"
+"use client";
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import dynamic from "next/dynamic";
 import { OnMount } from "@monaco-editor/react";
+import { getAccessToken } from "@auth0/nextjs-auth0";
 const Editor = dynamic(() => import("@monaco-editor/react"), { ssr: false });
 
 // Imported Types
@@ -33,9 +34,19 @@ const CodeEditor = () => {
 
     try {
       const { Y, WebsocketProvider, MonacoBinding } = await loadYjsModules();
+      const accessToken = await getAccessToken();
 
       ydocRef.current = new Y.Doc();
-      providerRef.current = new WebsocketProvider(YJS_SERVER_URL, YJS_ROOM_NAME, ydocRef.current);
+      providerRef.current = new WebsocketProvider(
+        YJS_SERVER_URL,
+        YJS_ROOM_NAME,
+        ydocRef.current,
+        {
+          params: {
+            token: accessToken,
+          },
+        }
+      );
 
       const yText = ydocRef.current.getText("monaco");
 

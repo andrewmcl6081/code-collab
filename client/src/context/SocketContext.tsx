@@ -30,9 +30,11 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
       if (!user) return;
 
       try {
-        const token = await getAccessToken();
+        const accessToken = await getAccessToken();
         const socketInstance = io(process.env.PUBLIC_SOCKET_URL || "http://localhost:4000", {
-          auth: { token },
+          auth: {
+            token: accessToken,
+          },
           autoConnect: true,
         });
 
