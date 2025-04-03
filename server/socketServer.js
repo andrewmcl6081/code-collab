@@ -33,11 +33,17 @@ function setupSocketIO(server) {
     // Handle chat messages
     socket.on("chatMessage", (data) => {
       console.log(`Message in room ${data.roomId}: ${data.message}`);
+      const { roomId, message } = data;
+      const senderId = socket.user?.sub;
+      const displayName = socket.user?.name || socket.user?.email;
+      const timestamp = new Date().toISOString();
 
-      io.to(data.roomId).emit("chatMessage", {
-        id: socket.id,
-        message: data.message,
-        timestamp: new Date()
+      io.to(roomId).emit("chatMessage", {
+        roomId,
+        message,
+        senderId,
+        displayName,
+        timestamp
       });
     });
 
